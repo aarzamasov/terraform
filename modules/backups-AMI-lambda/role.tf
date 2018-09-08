@@ -12,4 +12,4 @@ resource "aws_iam_policy" "role_backup" {
 resource "aws_iam_role_policy_attachment" "policy_to_role" {
   role       = "${aws_iam_role.role_backup.name}"
   policy_arn = "${aws_iam_policy.role_backup.arn}"
-}˝
+}
