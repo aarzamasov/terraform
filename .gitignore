@@ -7,3 +7,7 @@
 
 # .tfvars files
 *.tfvars
+
+# Sensitive vars
+vault.auto.tfvars
+*.vscode/
