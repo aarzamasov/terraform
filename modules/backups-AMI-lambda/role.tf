@@ -1,12 +1,12 @@
 resource "aws_iam_role" "role_backup" {
-  name               = "${var.name_tag}-${var.environment_tag}-slave-role"
-  assume_role_policy = "${file("${path.module}/files/ec2-trust.json")}"
+  name               = "role-backup-${terraform.workspace}"
+  assume_role_policy = "${file("${path.module}/files/lambda-trust.json")}"
 }
 
 resource "aws_iam_policy" "role_backup" {
-  name        = "${var.name_tag}-${var.environment_tag}-slave-cw-policy"
-  description = "CloudWatch Policy for ${var.name_tag} slave"
-  policy      = "${file("${path.module}/files/cw-policy-slave.json")}"
+  name        = "policy-backup-${terraform.workspace}"
+  description = "Policy for backup ec2"
+  policy      = "${file("${path.module}/files/policy_lamda_function.json")}"
 }
 
 resource "aws_iam_role_policy_attachment" "policy_to_role" {
