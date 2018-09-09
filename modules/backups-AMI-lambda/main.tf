@@ -35,8 +35,8 @@ resource "aws_lambda_function" "lambda_create_AMI" {
   filename         = "${path.module}/files/lambda_function_create_ami.zip"
   function_name    = "lambda_create_AMI"
   role             = "${aws_iam_role.role_backup.arn}"
-  handler          = "lambda_create_AMI.handler"
-  ##source_code_hash = "${data.archive_file.template_create_AMI.output_base64sha256}"
+  handler          = "index.handler"
+  source_code_hash = "${data.archive_file.template_create_AMI.output_base64sha256}"
   runtime          = "nodejs6.10"
   memory_size      = 128
   timeout          = 300
@@ -45,16 +45,16 @@ resource "aws_lambda_function" "lambda_delete_AMI" {
   filename         = "${path.module}/files/lambda_function_delete_ami.zip"
   function_name    = "lambda_delete_AMI"
   role             = "${aws_iam_role.role_backup.arn}"
-  handler          = "lambda_delete_AMI.handler"
-  ##source_code_hash = "${data.archive_file.template_delete_AMI.output_base64sha256}"
+  handler          = "index.handler"
+  source_code_hash = "${data.archive_file.template_delete_AMI.output_base64sha256}"
   runtime          = "nodejs6.10"
   memory_size      = 128
   timeout          = 300
 }
 resource "aws_cloudwatch_event_rule" "every_five_minutes" {
-    name = "every-day-minutes-at-01-20-AM"
-    description = "every day at 01:20 AM"
-    schedule_expression = "cron(20 01 * * ? *)"
+    name = "every-five-minutes"
+    description = "Fires every five minutes"
+    schedule_expression = "rate(5 minutes)"
 }
 resource "aws_cloudwatch_event_target" "check_foo_every_five_minutes_create_AMI_lambda" {
     rule = "${aws_cloudwatch_event_rule.every_five_minutes.name}"

@@ -1,6 +1,6 @@
 //Init AWS
 var aws = require('aws-sdk');  
-aws.config.region = '${aws_region}'; 
+aws.config.region = ${aws_region}; 
 var ec2 = new aws.EC2();  
 
 //Variables for the script
