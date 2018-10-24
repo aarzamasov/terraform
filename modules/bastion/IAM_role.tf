@@ -1,6 +1,11 @@
+resource "aws_iam_instance_profile" "bastion_host_role_instance_profile" {
+  name = "${var.stage}-bastion_instance_profile"
+  role = "${aws_iam_role.bastion_host_role.name}"
+}
+
 resource "aws_iam_role" "bastion_host_role" {
   path = "/"
-
+  name = "${var.stage}-bastion"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -22,6 +27,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bastion_host_role_policy" {
+  name = "${var.stage}-bastion-s3"
   role = "${aws_iam_role.bastion_host_role.id}"
 
   policy = <<EOF

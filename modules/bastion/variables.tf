@@ -13,54 +13,28 @@ variable "tags" {
   type        = "map"
 }
 
-variable "region" {}
-
-variable "cidrs" {
-  description = "List of CIDRs than can access to the bastion. Default : 0.0.0.0/0"
-  type        = "list"
-
-  default = [
-    "0.0.0.0/0",
-  ]
-}
-
-variable "is_lb_private" {
-  description = "If TRUE the load balancer scheme will be \"internal\" else \"internet-facing\""
-}
-
-variable "vpc_id" {
-  description = "VPC id were we'll deploy the bastion"
-}
-
-variable "bastion_host_key_pair" {
+variable "ssh_key" {
   description = "Select the key pair to use to launch the bastion host"
 }
 
-variable "hosted_zone_name" {
-  description = "Name of the hosted zone were we'll register the bastion DNS name"
-  default     = ""
+variable "instance_type" {
+  description = "Instance type for the bastion"
 }
 
-variable "bastion_record_name" {
-  description = "DNS record name to use for the bastion"
-  default     = ""
+variable "disk_size" {
+  description = "Size of the root volume"
 }
 
-variable "elb_subnets" {
-  type        = "list"
-  description = "List of subnet were the ELB will be deployed"
-}
-
-variable "auto_scaling_group_subnets" {
-  type        = "list"
-  description = "List of subnet were the Auto Scalling Group will deploy the instances"
+variable "region" {
+  description = "Region for the instance"
 }
 
 variable "bastion_amis" {
   type = "map"
 
   default = {
-    "us-east-1"      = "ami-f5f41398"
+    "us-east-1"      = "ami-0ff8a91507f77f867"
+    "us-east-2"      = "ami-0b59bfac6be064b78"
     "us-west-2"      = "ami-d0f506b0"
     "us-west-1"      = "ami-6e84fa0e"
     "eu-west-1"      = "ami-b0ac25c3"
@@ -75,14 +49,6 @@ variable "bastion_amis" {
 
 variable "associate_public_ip_address" {
   default = true
-}
-
-variable "bastion_instance_count" {
-  default = 1
-}
-
-variable "create_dns_record" {
-  description = "Choose if you want to create a record name for the bastion (LB). If true 'hosted_zone_name' and 'bastion_record_name' are mandatory "
 }
 
 variable "log_auto_clean" {
@@ -105,12 +71,18 @@ variable "log_expiry_days" {
   default     = 90
 }
 
-variable "public_ssh_port" {
-  description = "Set the SSH port to use from desktop to the bastion"
-  default     = 22
+variable "bastion_sg" {
+  description = "security groups to attach to the instance"
+  default     = ""
 }
 
-variable "private_ssh_port" {
-  description = "Set the SSH port to use between the bastion and private instance"
-  default     = 22
+
+variable "subnet_id" {
+  description = "subnet id for the instance"
+  default     = ""
+}
+
+variable "stage" {
+  type = "string"
+  description = "Stage name for tags. This is be represented in tags"
 }

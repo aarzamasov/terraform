@@ -1,5 +1,15 @@
+module "label_bastion" {
+  source      = "../null-label"
+  name        = "bastion-${var.stage}"
+  stage       = "${var.stage}"
+  label_order = ["name", "stage", "namespace"]
+  tags = {
+    "tf-workspace"  = "${terraform.workspace}"
+  }
+}
+
 data "template_file" "user_data" {
-  template = "${file("${path.module}/user_data.sh")}"
+  template = "${file("${path.module}/user_data.sh.j2")}"
 
   vars {
     aws_region  = "${var.region}"
@@ -7,152 +17,19 @@ data "template_file" "user_data" {
   }
 }
 
-
-
-resource "aws_security_group" "bastion_host_security_group" {
-  description = "Enable SSH access to the bastion host from external via SSH port"
-  vpc_id      = "${var.vpc_id}"
-
-  ingress {
-    from_port   = "${var.public_ssh_port}"
-    protocol    = "TCP"
-    to_port     = "${var.public_ssh_port}"
-    cidr_blocks = "${var.cidrs}"
-  }
-
-  egress {
-    from_port = "${var.private_ssh_port}"
-    protocol  = "TCP"
-    to_port   = "${var.private_ssh_port}"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "TCP"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "TCP"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = "${merge(var.tags)}"
-}
-
-resource "aws_security_group" "private_instances_security_group" {
-  description = "Enable SSH access to the Private instances from the bastion via SSH port"
-  vpc_id      = "${var.vpc_id}"
-
-  ingress {
-    from_port = "${var.private_ssh_port}"
-    protocol  = "TCP"
-    to_port   = "${var.private_ssh_port}"
-
-    security_groups = [
-      "${aws_security_group.bastion_host_security_group.id}",
-    ]
-  }
-
-  tags = "${merge(var.tags)}"
-}
-
-
-resource "aws_route53_record" "bastion_record_name" {
-  name    = "${var.bastion_record_name}"
-  type    = "CNAME"
-  zone_id = "${var.hosted_zone_name}"
-  ttl     = 300
-  count   = "${var.create_dns_record}"
-
-  records = [
-    "${aws_lb.bastion_lb.dns_name}",
-  ]
-}
-
-resource "aws_lb" "bastion_lb" {
-  internal = "${var.is_lb_private}"
-
-  subnets = [
-    "${var.elb_subnets}",
-  ]
-
-  load_balancer_type = "network"
-  tags               = "${merge(var.tags)}"
-}
-
-resource "aws_lb_target_group" "bastion_lb_target_group" {
-  port        = "${var.public_ssh_port}"
-  protocol    = "TCP"
-  vpc_id      = "${var.vpc_id}"
-  target_type = "instance"
-
-  health_check {
-    port     = "traffic-port"
-    protocol = "TCP"
-  }
-
-  tags = "${merge(var.tags)}"
-}
-
-resource "aws_lb_listener" "bastion_lb_listener_22" {
-  "default_action" {
-    target_group_arn = "${aws_lb_target_group.bastion_lb_target_group.arn}"
-    type             = "forward"
-  }
-
-  load_balancer_arn = "${aws_lb.bastion_lb.arn}"
-  port              = "${var.public_ssh_port}"
-  protocol          = "TCP"
-}
-
-resource "aws_iam_instance_profile" "bastion_host_profile" {
-  role = "${aws_iam_role.bastion_host_role.name}"
-  path = "/"
-}
-
-resource "aws_launch_configuration" "bastion_launch_configuration" {
-  image_id                    = "${lookup(var.bastion_amis, var.region)}"
-  instance_type               = "t2.nano"
+resource "aws_instance" "bastion" {
+  ami                         = "${lookup(var.bastion_amis, var.region)}"
+  instance_type               = "${var.instance_type}"
+  key_name                    = "${var.ssh_key}"
+  iam_instance_profile        = "${aws_iam_instance_profile.bastion_host_role_instance_profile.name}"
+  vpc_security_group_ids      = ["${var.bastion_sg}"]
+  subnet_id                   = "${var.subnet_id}"
   associate_public_ip_address = "${var.associate_public_ip_address}"
-  enable_monitoring           = true
-  iam_instance_profile        = "${aws_iam_instance_profile.bastion_host_profile.name}"
-  key_name                    = "${var.bastion_host_key_pair}"
 
-  security_groups = [
-    "${aws_security_group.bastion_host_security_group.id}",
-  ]
-
+  root_block_device {
+    volume_size           = "${var.disk_size}"
+    delete_on_termination = true
+  }
+  tags   = "${module.label_bastion.tags}"
   user_data = "${data.template_file.user_data.rendered}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_autoscaling_group" "bastion_auto_scaling_group" {
-  launch_configuration = "${aws_launch_configuration.bastion_launch_configuration.name}"
-  max_size             = "${var.bastion_instance_count}"
-  min_size             = "${var.bastion_instance_count}"
-  desired_capacity     = "${var.bastion_instance_count}"
-
-  vpc_zone_identifier = [
-    "${var.auto_scaling_group_subnets}",
-  ]
-
-  default_cooldown          = 180
-  health_check_grace_period = 180
-  health_check_type         = "EC2"
-
-  target_group_arns = [
-    "${aws_lb_target_group.bastion_lb_target_group.arn}",
-  ]
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
