@@ -1,3 +1,4 @@
+#lookup parameters for specic RDS types
 locals {
   port = "${var.default_ports[var.engine]}"
 }
@@ -34,8 +35,4 @@ variable "default_ports" {
     postgres = "5432"
     oracle   = "1521"
   }
-}
-
-locals {
-  port = "${var.default_ports[var.engine]}"
 }

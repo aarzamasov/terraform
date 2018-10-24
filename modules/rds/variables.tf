@@ -78,19 +78,9 @@ variable "storage_encrypted" {
   default     = true
 }
 
-variable "environment" {
+variable "stage" {
   description = "How do you want to call your environment, this is helpful if you have more than 1 VPC."
-  default     = "production"
-}
-
-variable "project" {
-  description = "The current project"
-  default     = ""
-}
-
-variable "tag" {
-  description = "A tag used to identify an RDS in a project that has more than one RDS"
-  default     = ""
+  default     = "dev"
 }
 
 variable "number" {
