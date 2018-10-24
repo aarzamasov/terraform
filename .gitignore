@@ -11,3 +11,4 @@
 # Sensitive vars
 vault.auto.tfvars
 *.vscode/
+*.DS_Store

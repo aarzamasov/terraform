@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "bucket" {
-  bucket = "${var.stage}-${var.bucket_name}"
+  bucket = "${var.bucket_name}"
   acl    = "bucket-owner-full-control"
 
   versioning {
