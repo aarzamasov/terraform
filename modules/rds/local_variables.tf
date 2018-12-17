@@ -4,8 +4,7 @@ locals {
 }
 
 variable "default_db_parameters" {
-  default = {
-    mysql = [
+  default = [
       {
         name  = "slow_query_log"
         value = "1"
@@ -21,13 +20,10 @@ variable "default_db_parameters" {
       {
         name  = "log_output"
         value = "FILE"
-      },
+      }
     ]
-
-    postgres = []
-    oracle   = []
   }
-}
+
 
 variable "default_ports" {
   default = {
